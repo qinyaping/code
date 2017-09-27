@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="TChatMediaServer" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/TChatMediaServer" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="/root/wuwenkui/share/include" />
+					<Add directory="/root/wuwenkui/share/boost_1_59/include" />
+					<Add directory="/root/wuwenkui/share/protobuf-2.6.1/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-pthread -lrt" />
+					<Add option="-lboost_thread" />
+					<Add library="/root/wuwenkui/share/boost_1_59/lib/libboost_system.a" />
+					<Add library="/root/wuwenkui/share/protobuf-2.6.1/lib/libprotobuf.a" />
+					<Add library="/root/wuwenkui/share/lib/libINetLib.a" />
+					<Add directory="/root/wuwenkui/share/boost_1_59/lib" />
+					<Add directory="/root/wuwenkui/share/protobuf-2.6.1/lib" />
+					<Add directory="/root/wuwenkui/share/lib" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/TChatMediaServer" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="/root/wuwenkui/share/boost_1_59/include" />
+					<Add directory="/root/wuwenkui/share/include" />
+					<Add directory="/root/wuwenkui/share/protobuf-2.6.1/include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-pthread -lrt" />
+					<Add option="-lboost_thread" />
+					<Add library="/root/wuwenkui/share/protobuf-2.6.1/lib/libprotobuf.a" />
+					<Add library="/root/wuwenkui/share/boost_1_59/lib/libboost_system.a" />
+					<Add library="/root/wuwenkui/share/lib/libINetLib.a" />
+					<Add directory="/root/wuwenkui/share/boost_1_59/lib" />
+					<Add directory="/root/wuwenkui/share/protobuf-2.6.1/lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="Method/Base_Method.cpp" />
+		<Unit filename="Method/Base_Method.h" />
+		<Unit filename="Method/Handler_User.cpp" />
+		<Unit filename="Method/Handler_User.h" />
+		<Unit filename="Method/user_manager.cpp" />
+		<Unit filename="Method/user_manager.h" />
+		<Unit filename="Monitor/monitor_info.cpp" />
+		<Unit filename="Monitor/monitor_info.h" />
+		<Unit filename="Monitor/monitor_io_handler.cpp" />
+		<Unit filename="Monitor/monitor_io_handler.h" />
+		<Unit filename="Monitor/monitor_protocol.h" />
+		<Unit filename="Monitor/monitor_server.cpp" />
+		<Unit filename="Monitor/monitor_server.h" />
+		<Unit filename="RtpHandler_Method.cpp" />
+		<Unit filename="RtpHandler_Method.h" />
+		<Unit filename="TcpHandler_Method.cpp" />
+		<Unit filename="TcpHandler_Method.h" />
+		<Unit filename="UdpServer/Udp_Handler.cpp" />
+		<Unit filename="UdpServer/Udp_Handler.h" />
+		<Unit filename="UdpServer/Udp_Server.cpp" />
+		<Unit filename="UdpServer/Udp_Server.h" />
+		<Unit filename="client/center_handler.cpp" />
+		<Unit filename="client/center_handler.h" />
+		<Unit filename="client/client.cpp" />
+		<Unit filename="client/client.h" />
+		<Unit filename="client/client_pool.cpp" />
+		<Unit filename="client/client_pool.h" />
+		<Unit filename="client/session.cpp" />
+		<Unit filename="client/session.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="protocol/protocol_header.h" />
+		<Unit filename="protocol/protocol_parse.cpp" />
+		<Unit filename="protocol/protocol_parse.h" />
+		<Unit filename="protocol/sd.data_define.pb.cc" />
+		<Unit filename="protocol/sd.data_define.pb.h" />
+		<Unit filename="protocol/sd.data_structure.pb.cc" />
+		<Unit filename="protocol/sd.data_structure.pb.h" />
+		<Unit filename="public/config.cpp" />
+		<Unit filename="public/config.h" />
+		<Unit filename="public/data_type.h" />
+		<Unit filename="public/io_net_buffer.cpp" />
+		<Unit filename="public/io_net_buffer.h" />
+		<Unit filename="public/ipid_method.h" />
+		<Unit filename="public/log.cpp" />
+		<Unit filename="public/log.h" />
+		<Unit filename="xml/tinystr.cpp" />
+		<Unit filename="xml/tinystr.h" />
+		<Unit filename="xml/tinyxml.cpp" />
+		<Unit filename="xml/tinyxml.h" />
+		<Unit filename="xml/tinyxmlerror.cpp" />
+		<Unit filename="xml/tinyxmlparser.cpp" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

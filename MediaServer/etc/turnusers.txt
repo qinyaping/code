@@ -1,0 +1,2 @@
+test1:12345678:demo:authorized
+pnz:123456:domain.org:authorized

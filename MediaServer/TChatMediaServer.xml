@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- 媒体转发服务器配置文件-->
+<SDConfig>
+	<!-- 基础设置-->
+	<Setting>
+    		<!-- 服务ID[IP地址+媒体转发服务监听端口]-->                        
+		<ServiceID>1921683689100</ServiceID>
+		<!-- 心跳时间间隔(秒)-->                 
+		<TimeOut>30</TimeOut>
+		<!-- 日志打印等级(0 - 3)-->
+		<Loglevel>1</Loglevel>
+		<!-- 缓冲区大小(MB)-->            
+		<BuffSize>32</BuffSize>
+		<!-- 录像服务器状态 0:停用 1:启用-->           
+		<RsStatus>1</RsStatus>     
+		<!-- 日志文件路径-->
+		<LogPath>./</LogPath>    
+	</Setting>
+	<!-- 网络设置-->
+	<NetInfo>                  
+		<!-- 媒体转发服务监听端口-->           
+		<MediaPort>9100</MediaPort>
+		<!-- 服务运行状态监听端口-->           
+		<MonitorPort>9100</MonitorPort>
+		<!-- 中心控制服务器地址-->        
+		<CsServerIP>192.168.15.250</CsServerIP>
+		<!-- 中心控制服务器端口-->
+		<CsServerPort>9000</CsServerPort>
+		<!-- 录像服务器地址-->        
+		<RsServerIP>192.168.15.250</RsServerIP>
+		<!-- 录像服务器端口-->
+		<RsServerPort>22345</RsServerPort>
+		<!-- 媒体服务器提供服务内网地址-->        
+		<MsLanServerIP>192.168.15.250</MsLanServerIP>
+		<!-- 媒体服务器提供服务公网地址-->        
+		<MsWanServerIP>192.168.15.250</MsWanServerIP>
+		<!-- 媒体服务器提供服务公网端口-->
+		<MsWanServerPort>1111</MsWanServerPort>
+	</NetInfo>
+	<TurnServer>
+	    <life_time>1800</life_time>	
+    	<max_port>65535</max_port>				
+    	<min_port>50000</min_port>				
+    	<max_relay_per_username>5</max_relay_per_username>
+    	<bandwidth_per_allocation>150</bandwidth_per_allocation>
+    	<restricted_bandwidth>100</restricted_bandwidth>
+    	<nonce_key>hieKedq</nonce_key>
+    	<realm>demo</realm>
+	</TurnServer>
+</SDConfig>

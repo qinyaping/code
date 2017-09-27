@@ -1,0 +1,445 @@
+#include "TcpHandler_Method.h"
+#include "./client/session.h"
+#include "protocol/protocol_header.h"
+#include <boost/thread/thread.hpp>
+#include "./public/log.h"
+#include "public/config.h"
+#include "protocol/protocol_parse.h"
+#include "Method/user_manager.h"
+#include "Method/Handler_User.h"
+
+CTcpHandler::CTcpHandler()
+{
+    m_pSession = NULL;
+    m_ServerIP = "";
+    m_ServerPort = 0;
+    m_isConnect = false;
+    m_isRegister = false;
+    m_isActive = true;
+
+    Start();
+}
+
+CTcpHandler::~CTcpHandler()
+{
+    Stop();
+}
+
+bool CTcpHandler::Start()
+{
+    boost::thread thrd(boost::bind(&CTcpHandler::Handler_Run, this));
+
+	return true;
+}
+
+bool CTcpHandler::Stop()
+{
+    m_isActive = false;
+
+	return true;
+}
+
+
+
+bool CTcpHandler::OnConnected(CSession *pSession,string SrvIP,int Port)
+{
+    m_pSession = pSession;m_ServerIP = SrvIP;
+    m_ServerPort = Port;m_isConnect = true;
+
+    ILOG_MESSAGE(LOG_START,"Conect To ControlServer[ip:%s,port:%d] Success!",m_ServerIP.c_str(),m_ServerPort);
+    Handler_RegisterService();
+	return true;
+}
+
+bool CTcpHandler::OnDisConnected()
+{
+    m_isConnect = false;m_isRegister = false;
+    ILOG_MESSAGE(LOG_WARNING,"ControlServer[ip:%s,port:%d] Disconnect",m_ServerIP.c_str(),m_ServerPort);
+	return true;
+}
+
+
+bool CTcpHandler::OnReciveData(unsigned char * data,unsigned int len)
+{
+    Message msg;msg.ParseFromArray(data,len);
+
+    if(msg.errcode() != CODE_OPERATE_SUCCESS){
+    ILOG_MESSAGE(LOG_ERROR,"errormsg code is:%d",msg.errcode());return false;}
+
+    int msg_type = msg.msgtype();
+    switch(msg_type)
+    {
+        case SERVER_SERVICE_REGISTER_RESP://VS注册视频转发服务响应
+            Handler_RegisterServiceResp(msg);
+            break;
+        case SERVER_SERVICE_HEARTBEAT_RESP://VS心跳响应
+            ILOG_MESSAGE(LOG_INFO,"Send Heartbeat to CS Server Success.");
+            break;
+        case SERVER_CREATE_ROOM_PUSH_REQ://创建房间
+            Handler_CreateRoom(msg);
+            break;
+        case SERVER_ENTER_ROOM_PUSH_REQ://用户进入房间
+            Handler_EnterRoom(msg);
+            break;
+        case SERVER_DELETE_ROOM_PUSH_REQ://删除房间
+            Handler_DeleteRoom(msg);
+            break;
+        case SERVER_LEAVE_ROOM_PUSH_REQ://用户离开房间
+            Handler_LeaveRoom(msg);
+            break;
+        case SERVER_START_RECORD_PUSH_REQ://开始录像
+            Handler_StartRecordReq(msg);
+            break;
+        case SERVER_STOP_RECORD_PUSH_REQ://停止录像
+            Handler_StopRecord(msg);
+            break;
+        case SERVER_SET_VIDEO_PUSH_REQ://设置录像参数
+            Handler_SetVideo(msg);
+            break;
+        case SERVER_OPERATE_VIDEO_PUSH_REQ://用户视频操作
+            Handler_OperateVideoReq(msg);
+            break;
+        case SERVER_OPERATE_AUDIO_PUSH_REQ://用户音频操作
+            Handler_OperateAudioReq(msg);
+            break;
+        case SERVER_P2P_CHANNEL_PUSH_REQ://建立P2P通道请求
+            Handler_P2PChannelReq(msg);
+            break;
+        default:
+            break;
+    }
+	return true;
+}
+
+bool CTcpHandler::OnSendData()
+{
+	return true;
+}
+
+
+bool CTcpHandler::SendData(unsigned char * data,unsigned int len)
+{
+    if(m_isConnect){m_pSession->handle_send(data,len);}else{
+    ILOG_MESSAGE(LOG_ERROR,"Data sent failed, Server disconnect");return false;}
+
+	return true;
+}
+
+
+bool CTcpHandler::Handler_RegisterService()
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+	//TYPE_VIDEOSERVER   SERVER_SERVICE_REGISTER_REQ
+    Singleton_CProtocolParse->Server_RegisterReq(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+
+bool CTcpHandler::Handler_SendHeartbeat()
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    Singleton_CProtocolParse->Server_HeartbeatReq(Singleton_IConfig->m_nodeid,Singleton_CUserManager->GetUserSize(),SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+
+
+void CTcpHandler::Handler_Run()
+{
+    int nTime = Singleton_IConfig->m_nTime/2;if(nTime < 2){nTime = 2;}
+    while(1)
+    {
+        if(!m_isActive){break;}
+
+        if(m_isConnect && m_isRegister){Handler_SendHeartbeat();}sleep(nTime);
+    }
+}
+
+
+bool CTcpHandler::Handler_CreateRoom(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0, roomCreator = 0;string roomName = "";
+    Singleton_CProtocolParse->Server_CreateRoomReq(msg,roomID,roomName,roomCreator);
+    Singleton_CUserManager->SetRoomInfo(roomID);
+	//SERVER_CREATE_ROOM_PUSH_RESP
+    Singleton_CProtocolParse->Server_CreateRoomResp(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+
+bool CTcpHandler::Handler_DeleteRoom(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0;
+    Singleton_CProtocolParse->Server_DeleteRoomReq(msg,roomID);
+    Singleton_CUserManager->DeleteRoomInfo(roomID);
+
+    Singleton_CProtocolParse->Server_DeleteRoomResp(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+
+
+bool CTcpHandler::Handler_EnterRoom(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0;
+    Singleton_CProtocolParse->Server_EnterRoomReq(msg,roomID,userID);
+    IUserInfo *pUser = Singleton_CUserManager->FindUser(userID);
+
+    if(pUser == NULL){
+    pUser = Singleton_CUserManager->GetUser();if(pUser == NULL){return false;}}
+
+    pUser->SetInfo(userID,roomID);
+    Singleton_CUserManager->CreateUser(userID,pUser);
+	//SERVER_ENTER_ROOM_PUSH_RESP
+    Singleton_CProtocolParse->Server_EnterRoomResp(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+
+bool CTcpHandler::Handler_LeaveRoom(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0;
+    Singleton_CProtocolParse->Server_LeaveRoomReq(msg,roomID,userID);
+    Singleton_CUserManager->ClearUserInfo(roomID,userID);
+
+    Singleton_CProtocolParse->Server_LeaveRoomResp(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+
+bool CTcpHandler::Handler_RegisterServiceResp(Message &msg)
+{
+    m_isRegister = true;ILOG_MESSAGE(LOG_INFO,"Registered Service to CS Server Success.");
+	return true;
+}
+
+
+bool CTcpHandler::Handler_StartRecordReq(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0,nType = 0,nParam = 0,connectID = 0,nFlag = 0,nFrame = 0,AudioRate = 0,VideoRate = 0,wResolute = 0,hResolute = 0,nModel = 0,nRecordID = 0,nShowType = 0,nScale = 0;
+    vector<int> id_vec;string strValue = "",strToken = "";
+
+    Singleton_CProtocolParse->Server_StartRecordReq(msg,roomID,userID,id_vec,connectID,nType,nFlag,nParam,strValue,nFrame,AudioRate,VideoRate,wResolute,hResolute,strToken,nModel,nRecordID,nShowType,nScale);
+
+    if(!Singleton_IConfig->m_RsStatus)
+    {
+        Singleton_CProtocolParse->Server_StartRecordResp(id_vec,userID,"",connectID,nFlag,nParam,strValue,nModel,nRecordID,SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    IUserInfo *pUser = Singleton_CUserManager->FindUser(userID);
+    if(pUser == NULL)
+    {
+        Singleton_CProtocolParse->Server_StartRecordResp(id_vec,userID,"",connectID,nFlag,nParam,strValue,nModel,nRecordID,SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    //发送开始录像到录像服务器 SERVER_START_RECORD_PUSH_REQ
+    pUser->Start_ReCordPushReq(id_vec,userID,roomID,nType,connectID,nFlag,nParam,strValue,nFrame,AudioRate,VideoRate,wResolute,hResolute,nModel,strToken,nRecordID,nShowType,nScale);
+	return true;
+}
+
+
+
+bool CTcpHandler::Handler_StartRecordResp(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int userID = 0,nParam = 0,connectID = 0,nFlag = 0,nType = 0,nModel = 0,nRecordID = 0;vector<int> id_vec;string strFileName = "",strValue = "";
+    Singleton_CProtocolParse->Server_StartRecordPushResp(msg,id_vec,userID,strFileName,nType,connectID,nFlag,nParam,strValue,nModel,nRecordID);
+	//SERVER_START_RECORD_PUSH_RESP
+    Singleton_CProtocolParse->Server_StartRecordResp(id_vec,userID,strFileName,connectID,nFlag,nParam,strValue,nModel,nRecordID,SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+
+    if(nModel == 1 || nModel == 3)//服务端录像和业务服务器触发录像需要媒体服务器转流
+    {
+        //录像类型有重定义
+        if(nType < 10){nType = TYPE_AUDIO_DATA;}else{nType = TYPE_VIDEO_DATA;}
+        Singleton_CUserManager->SetRecordeInfo(strFileName,id_vec,nType);
+
+        //开始录像用户录像计数++
+        for(unsigned int i = 0; i < id_vec.size(); i++)
+        {IUserInfo *pUser = Singleton_CUserManager->FindUser(id_vec[i]);
+        if(pUser != NULL){pUser->CountAdd(nType);}}
+    }
+	return true;
+}
+
+
+
+bool CTcpHandler::Handler_StopRecord(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0,nModel = 0;string file_name = "";
+    Singleton_CProtocolParse->Server_StopRecordReq(msg,roomID,userID,file_name,nModel);
+
+    if(!Singleton_IConfig->m_RsStatus)
+    {
+        Singleton_CProtocolParse->Server_StopRecordResp(SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    IUserInfo *pUser = Singleton_CUserManager->FindUser(userID);
+    if(pUser == NULL)
+    {
+        Singleton_CProtocolParse->Server_StopRecordResp(SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    if(nModel == 1 || nModel == 3)//服务端录像和业务服务器触发录像需要媒体服务器转流
+    {
+        int record_type = 0;vector<int> id_vec;
+        if(Singleton_CUserManager->GetRecordeInfo(file_name,id_vec,record_type))
+        {
+            //录像文件停止，对应用户录像计数--
+            for(unsigned int i = 0; i < id_vec.size(); i++)
+            {IUserInfo* pUser = Singleton_CUserManager->FindUser(id_vec[i]);
+            if(pUser != NULL){pUser->CountDelete(record_type);}}
+        }
+    }
+	//通知录像服务器停止录像
+    pUser->Stop_ReCordPushReq(userID,roomID,file_name,nModel);
+
+    Singleton_CProtocolParse->Server_StopRecordResp(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+	return true;
+}
+
+bool CTcpHandler::Handler_SetVideo(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0,nFrame = 0,nRate = 0;
+    Singleton_CProtocolParse->Server_SetVideoReq(msg,roomID,userID,nFrame,nRate);
+
+    if(!Singleton_IConfig->m_RsStatus)
+    {
+        Singleton_CProtocolParse->Server_SetVideoResp(SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    IUserInfo *pUser = Singleton_CUserManager->FindUser(userID);
+    if(pUser == NULL)
+    {
+        Singleton_CProtocolParse->Server_SetVideoResp(SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+    pUser->Set_VideoPushReq(userID,roomID,nFrame,nRate);
+
+    Singleton_CProtocolParse->Server_SetVideoResp(SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+
+	return true;
+}
+
+
+
+
+bool CTcpHandler::Handler_OperateVideoReq(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0,requestID = 0;bool bStatus = false;
+    Singleton_CProtocolParse->Server_OperateVideoReq(msg,roomID,userID,requestID,bStatus);
+
+    IUserInfo *pUser = Singleton_CUserManager->FindUser(requestID);
+    if(pUser == NULL)
+    {
+        Singleton_CProtocolParse->Server_OperateVideoResp(userID,requestID,bStatus,SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    //根据用户ID查找用户UDP通信地址和端口
+    pUser->Operate_VideoPushReq(userID,bStatus);
+
+    Singleton_CProtocolParse->Server_OperateVideoResp(userID,requestID,bStatus,SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+
+	return true;
+}
+
+
+bool CTcpHandler::Handler_OperateAudioReq(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int roomID = 0,userID = 0,requestID = 0;bool bStatus = false;
+    Singleton_CProtocolParse->Server_OperateAudioReq(msg,roomID,userID,requestID,bStatus);
+
+    IUserInfo *pUser = Singleton_CUserManager->FindUser(requestID);
+    if(pUser == NULL)
+    {
+        Singleton_CProtocolParse->Server_OperateAudioResp(userID,requestID,bStatus,SendBuff,SendLen,CODE_USER_NOTINROOM);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    //根据用户ID查找用户UDP通信地址和端口
+    pUser->Operate_AudioPushReq(userID,bStatus);
+
+    Singleton_CProtocolParse->Server_OperateAudioResp(userID,requestID,bStatus,SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+
+	return true;
+}
+
+
+
+
+bool CTcpHandler::Handler_P2PChannelReq(Message &msg)
+{
+    unsigned char SendBuff[MAX_SEND_LEN] ={0};
+    unsigned int SendLen = 0;
+
+    int userID = 0,requestID = 0;
+    Singleton_CProtocolParse->Server_P2PChannelReq(msg,userID,requestID);
+
+    string user_ip = "",request_ip = "";
+    int user_port = 0, request_port = 0;
+
+    if(!Singleton_CUserManager->FindRtpAdress(userID,user_ip,user_port))
+    {
+        Singleton_CProtocolParse->Server_P2PChannelResp(userID,requestID,user_ip,user_port,request_ip,request_port,SendBuff,SendLen,CODE_ERROR_CREATE_CHANNEL);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    if(!Singleton_CUserManager->FindRtpAdress(requestID,request_ip,request_port))
+    {
+        Singleton_CProtocolParse->Server_P2PChannelResp(userID,requestID,user_ip,user_port,request_ip,request_port,SendBuff,SendLen,CODE_ERROR_CREATE_CHANNEL);
+        SendData(SendBuff,SendLen);return false;
+    }
+
+    Singleton_CProtocolParse->Server_P2PChannelResp(userID,requestID,user_ip,user_port,request_ip,request_port,SendBuff,SendLen);
+    SendData(SendBuff,SendLen);
+
+	return true;
+}

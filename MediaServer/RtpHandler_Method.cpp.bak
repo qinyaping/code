@@ -1,0 +1,247 @@
+#include "RtpHandler_Method.h"
+#include "UdpServer/Udp_Handler.h"
+#include "public/log.h"
+#include "public/data_type.h"
+#include "Method/user_manager.h"
+#include "protocol/protocol_header.h"
+#include "protocol/sd.data_define.pb.h"
+#include "protocol/sd.data_structure.pb.h"
+#include "protocol/protocol_parse.h"
+#include "Method/Handler_User.h"
+
+CRTPMethod::CRTPMethod(Udp_Handle *handler)
+{
+    m_pHandler = handler;
+//	INIT_LIST(allocation_list);
+//	INIT_LIST(account_list);
+}
+
+CRTPMethod::~CRTPMethod()
+{
+
+}
+
+bool CRTPMethod::OnConnected(string addr)
+{
+
+    return true;
+}
+
+bool CRTPMethod::OnDisConnected()
+{
+
+    return true;
+}
+
+bool CRTPMethod::OnReciveData(unsigned char * data,unsigned int len)
+{
+    return true;
+}
+
+bool CRTPMethod::SendData(unsigned char *data,unsigned int len)
+{
+
+    return true;
+}
+
+bool CRTPMethod::OnSendData()
+{
+
+    return true;
+}
+
+bool CRTPMethod::SendData(unsigned char *data,unsigned int len,string SendAddr,unsigned int SendPort)
+{
+    m_pHandler->handle_async_write(data,len,SendAddr,SendPort);
+
+    return true;
+}
+
+bool CRTPMethod::OnReciveData(unsigned char * data,unsigned int len,string SourceAddr,unsigned int SourcePort)
+{
+//    if(data[1] == 0x00) //数据包的第二个字节为0 则为建立通道数据包
+//    {
+//        //偏移两个字节
+//        int op_value = 2;len = len - op_value;if(len <= HEADER_PACKET_LEN){return false;}
+//
+//        PacketHeader *header = (PacketHeader *)(data + op_value);if(!header->CheckCRC(len))
+//        {ILOG_MESSAGE(LOG_ERROR,"Create Channel Packet CheckCRC Failed.");return false;}
+//
+//        CreateChannel(data + HEADER_PACKET_LEN + op_value,len - HEADER_PACKET_LEN,SourceAddr,SourcePort);
+//    }
+//    else
+//    {
+//        IUserInfo *pUser = Singleton_CUserManager->FindUser(SourceAddr,SourcePort);
+//        //通过IP地址找到用户对象信息则转发用户数据
+//        if(pUser != NULL){pUser->SendRtpData(this,data,len);}
+//    }
+//    return true;
+//	struct list_head allocation_list;
+//	struct list_head account_list;
+//	INIT_LIST(allocation_list);
+//	INIT_LIST(account_list);
+//	struct account_desc* desc = NULL;
+//    desc = account_desc_new("test1", "12345678", "demo", AUTHORIZED);
+//    if(desc)
+//    {
+//      account_list_add(&account_list, desc);
+//    }
+//
+//	//int sock_tmp = -1;
+//
+//	struct sockaddr_storage saddr;
+//	struct sockaddr_storage daddr;
+////	struct addrinfo hints;
+////	struct addrinfo* res = NULL;
+////	memset(&hints, 0, sizeof(struct addrinfo));
+////	hints.ai_family = AF_INET; //AF_UNSPEC;
+////	hints.ai_socktype = SOCK_DGRAM;
+////	hints.ai_protocol = IPPROTO_UDP;
+////	hints.ai_flags = 0;
+//
+////	char str_port[16] = {0};
+////	sprintf(str_port, "%d", SourcePort);
+////
+////	int r;
+////	if (r = getaddrinfo(SourceAddr.c_str(), str_port, &hints, &res) != 0)
+////	{
+////		fprintf(stderr, "getaddrinfo(%s:%s): %s\n", SourceAddr.c_str(),
+////				str_port, gai_strerror(r));
+////		exit(EXIT_FAILURE);
+////	}
+//	((sockaddr_in*)&saddr)->sin_family = AF_INET;
+//	((sockaddr_in*)&saddr)->sin_addr.s_addr = inet_addr(SourceAddr.c_str());
+//	((sockaddr_in*)&saddr)->sin_port = htons(SourcePort);
+//	memset(((sockaddr_in*)&saddr)->sin_zero, 0, sizeof(((sockaddr_in*)&saddr)->sin_zero));
+//
+//	socklen_t daddr_size = sizeof(struct sockaddr_storage);
+//	getsockname(GetSocket(), (struct sockaddr*)&daddr, &daddr_size);
+//	((sockaddr_in*)&daddr)->sin_family = AF_INET;
+//	((sockaddr_in*)&daddr)->sin_addr.s_addr = inet_addr(Singleton_IConfig->m_MediaSrv_lanIp.c_str());
+//	((sockaddr_in*)&daddr)->sin_port = htons(Singleton_IConfig->m_MediaPort);
+//	memset(((sockaddr_in*)&daddr)->sin_zero, 0, sizeof(((sockaddr_in*)&saddr)->sin_zero));
+//
+////	memcpy(&saddr, res->ai_addr, res->ai_addrlen);
+////	int len_addr = res->ai_addrlen;
+////	freeaddrinfo(res);
+//
+//	char buf1[INET6_ADDRSTRLEN] = {};
+//    inet_ntop(AF_INET, &((struct sockaddr_in*)&saddr)->sin_addr, buf1, INET6_ADDRSTRLEN);
+//
+//	char buf2[INET6_ADDRSTRLEN] = {};
+//    inet_ntop(AF_INET, &((struct sockaddr_in*)&daddr)->sin_addr, buf2, INET6_ADDRSTRLEN);
+//
+//    printf("\n[%ld]start:  source_addr = %s, source_port = %d, dest_addr = %s, dest_port = %d \n", syscall(SYS_gettid), buf1,
+//			  ntohs(((struct sockaddr_in*)&saddr)->sin_port),  buf2, ntohs(((struct sockaddr_in*)&daddr)->sin_port)
+//			  );
+////	  printf("start:   dest_addr = %s, dest_port = %d \n",
+////			  inet_ntoa(((struct sockaddr_in*)&daddr)->sin_addr), ntohs(((struct sockaddr_in*)&daddr)->sin_port)
+////			  );
+//
+//	struct tls_peer* speer = NULL;
+//	turnserver_listen_recv(17, GetSocket(), (const char*)data, len, (const sockaddr*)&saddr, (const sockaddr*)&daddr, sizeof(saddr), &allocation_list, &account_list, speer, this);
+
+
+	return true;
+}
+
+int CRTPMethod::GetSocket()
+{
+	return m_pHandler->get_socket();
+}
+
+//#include <sys/socket.h>
+//#include <netinet/in.h>
+//#include <arpa/inet.h>
+//#include <stdio.h>
+//#include "turnserver/list.h"
+//#include "turnserver/allocation.h"
+
+//void CRTPMethod::PrintAllocationList()
+//{
+//	  struct list_head* get = NULL;
+//	  struct list_head* n = NULL;
+//
+//	  struct list_head* list = &allocation_list;
+//
+//	  list_iterate_safe(get, n, list)
+//	  {
+//	    struct allocation_desc* tmp = list_get(get, struct allocation_desc, list);
+//
+//		char buf1[INET6_ADDRSTRLEN] = {};
+//	    inet_ntop(AF_INET, &((struct sockaddr_in*)&(tmp->tuple.client_addr))->sin_addr, buf1, INET6_ADDRSTRLEN);
+//
+//		char buf2[INET6_ADDRSTRLEN] = {};
+//	    inet_ntop(AF_INET, &((struct sockaddr_in*)&(tmp->tuple.server_addr))->sin_addr, buf2, INET6_ADDRSTRLEN);
+//
+//		char buf3[INET6_ADDRSTRLEN] = {};
+//	    inet_ntop(AF_INET, &((struct sockaddr_in*)&(tmp->relayed_addr))->sin_addr, buf3, INET6_ADDRSTRLEN);
+//
+//	    printf("tuple_transport = %d, client_addr = %s, client_port = %d, server_addr = %s, server_port = %d, relay_transport = %d,  relay_addr = %s, relay_port = %d \n",
+//	    		tmp->tuple.transport_protocol,
+//	    		buf1 ,
+//	    		ntohs(((struct sockaddr_in*)(struct sockaddr*)&(tmp->tuple.client_addr))->sin_port),
+//	    		 buf2,
+//	    		ntohs(((struct sockaddr_in*)(struct sockaddr*)&(tmp->tuple.server_addr))->sin_port),
+//	    		tmp->tuple.transport_protocol,
+//	    		buf3,
+//	    		ntohs(((struct sockaddr_in*)(struct sockaddr*)&(tmp->relayed_addr))->sin_port)
+//
+//	    		);
+//
+//		  struct list_head* get1 = NULL;
+//		  struct list_head* n1 = NULL;
+//	    list_iterate_safe(get1, n1, &tmp->peers_permissions)
+//	    {
+//	      struct allocation_permission* tmp_per = list_get(get1,
+//	          struct allocation_permission, list);
+//
+//	      /* check only the network address (not the port) */
+////	      if(tmp_per->family != addr->sa_family)
+////	      {
+////	        continue;
+////	      }
+//	    // printf("permission_ip = %s \n",tmp_per->peer_addr);
+//
+//	    }
+//	  }
+//}
+
+bool CRTPMethod::CreateChannel(unsigned char *data,unsigned int len,string SourceAddr,unsigned int SourcePort)
+{
+    if(len <= 0){return false;}Message msg;msg.ParseFromArray(data,len);
+    if(msg.errcode() != CODE_OPERATE_SUCCESS){
+    ILOG_MESSAGE(LOG_ERROR,"errormsg. code is:%d",msg.errcode());return false;}
+
+    if(msg.msgtype() == CLIENT_CREATE_CHANNEL_REQ)
+    {
+        unsigned char SendBuff[MAX_SEND_LEN] ={0};
+        unsigned int SendLen = 0;
+        int roomID =0,userID = 0;int op_value = 2;//偏移两个字节
+
+        Singleton_CProtocolParse->Server_CreateChannelReq(msg,roomID,userID);//解析出用户的信息
+        IUserInfo *pUser = Singleton_CUserManager->FindUser(userID);
+        if(pUser == NULL)//用户没有进入房间 返回建立通道失败
+        {
+            Singleton_CProtocolParse->Server_CreateChannelResp(userID,roomID,SendBuff + op_value,SendLen,CODE_USER_NOTINROOM);
+            SendLen += op_value;SendData(SendBuff,SendLen,SourceAddr,SourcePort);return false;
+        }
+
+        //响应客户端建立RTP通道请求
+        Singleton_CProtocolParse->Server_CreateChannelResp(userID,roomID,SendBuff + op_value,SendLen);
+        SendLen += op_value;SendData(SendBuff,SendLen,SourceAddr,SourcePort);
+
+        if(!pUser->IsChannel())
+        {
+            //保存IP地址对应用户对象信息
+            Singleton_CUserManager->SaveUserToIpInfo(pUser,SourceAddr,SourcePort);
+            //保存IP地址对应用户ID信息
+            Singleton_CUserManager->AddRtpInfo(userID,SourceAddr,SourcePort);
+            //更新用户转发列表数据
+            Singleton_CUserManager->UpdateUserList(roomID,userID,SourceAddr,SourcePort);
+        }
+    }
+
+    return true;
+}
+
